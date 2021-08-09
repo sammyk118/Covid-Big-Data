@@ -16,7 +16,7 @@ object Start {
     spark.sparkContext.setLogLevel("WARN") //reduces terminal clutter
     println("created spark session")
 
-    println("Hello, world!")
+    println("Hello, world! this is a new line")
 
   }
 }
