@@ -36,6 +36,9 @@ bin/
 # mac
 .DS_Store
 
+#spark
+spark-warehouse
+
 # other?
 .history
 .scala_dependencies
