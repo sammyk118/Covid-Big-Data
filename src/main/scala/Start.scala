@@ -1,7 +1,9 @@
 import org.apache.spark.sql.SparkSession
 
+import scala.io.StdIn.readLine
 import session.spark.LocalSparkSession
 import covid.tables.DFTables
+import trends.{PopulationDensity, sampleTrend} //enter your query imports here
 
 object Start {
   val spark = LocalSparkSession()
@@ -12,11 +14,31 @@ object Start {
     spark.sparkContext.setLogLevel("WARN") //reduces terminal clutter
     println("created spark session")
 
-    println("Hello, world! this is a new line")
+    def input() {
+      println("What would you like to do? \nGTSampleTrend: 0 \nT1PopulationDensity: 1 \nT2TrendName: 2 \nT3TrendName: 3 \nT4TrendName: 4\n")
+      print("enter your command here: ")
+      val command = readLine()
+      if (command == "0") {
+        sampleTrend.thisisamethod
+      }
+      if (command == "1") {
+        PopulationDensity.deflateDFTable
+      }
+      if (command == "2") {
+        println("this command still needs to be set up")
+      }
+      if (command == "3") {
+        println("this command still needs to be set up")
+      }
+      if (command == "4") {
+        println("this command still needs to be set up")
+      }
+      exit()
+    }
 
-    //Testing table creation -- asserting that the headers were read as column names
-    DFTables.getCOVID_19Recovered.select("Province/State").show()
-
-    System.exit(0)
+    def exit() {
+      System.exit(0)
+    }
+    input()
   }
 }

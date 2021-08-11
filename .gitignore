@@ -47,4 +47,5 @@ spark-warehouse
 #general
 *.class
 
-.sbt
+metastore/
+**/metastore_db/*
