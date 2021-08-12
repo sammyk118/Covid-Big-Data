@@ -3,7 +3,7 @@ import org.apache.spark.sql.SparkSession
 import scala.io.StdIn.readLine
 import session.spark.LocalSparkSession
 import covid.tables.DFTables
-import trends.{PopulationDensity, sampleTrend} //enter your query imports here
+import trends.{PopulationDensity, sampleTrend, TrendTwo, TrendThree, TrendFour} //enter your query imports here
 
 object Start {
   val spark = LocalSparkSession()
@@ -25,13 +25,13 @@ object Start {
         PopulationDensity.deflateDFTable
       }
       if (command == "2") {
-        println("this command still needs to be set up")
+        TrendTwo.first
       }
       if (command == "3") {
-        println("this command still needs to be set up")
+        TrendThree.start
       }
       if (command == "4") {
-        println("this command still needs to be set up")
+        TrendFour.start
       }
       exit()
     }
