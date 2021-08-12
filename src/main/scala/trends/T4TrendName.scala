@@ -5,6 +5,6 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object TrendFour{
   def start(): Unit ={
-    println("entered trend four")
+    println("trend 4")
   }
 }
