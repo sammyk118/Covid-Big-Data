@@ -3,6 +3,7 @@ package trends
 import session.spark.LocalSparkSession
 import covid.tables.DFTables
 import trends.util.DateValDiff
+import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row}
 /*
@@ -11,24 +12,15 @@ import org.apache.spark.sql.{DataFrame, Row}
 
 object PopulationDensity {
     def deflateDFTable: Unit = {
-        val spark      = LocalSparkSession()
         val columns    = DFTables.getHeaderCOVID_19Confirmed
         val cov_19Conf = DFTables.getCOVID_19Confirmed.rdd
 
         val filtered = cov_19Conf.filter(row => isCountryOfInterest(row.getAs[String]("Country/Region")))
+        val (diffTbl, newCols) = DateValDiff.divideDiffRDD(filtered -> columns)
+        val ((_,_),(dTbl,_)) = DateValDiff.divideDiff(cov_19Conf-> columns)
 
-        //val ((othColsDF, colNames), (valColsDF, diffColNames)) = divideDiffRDD(filtered, columns)
-        // val othCols = othColsDF.rdd
-        // val valCols = valColsDF.rdd
-
-        //valCols.foreach(row => println(row))
-
-        DateValDiff.divideDiffDF(DFTables.getCOVID_19Confirmed).show(5, 7, false)
-        
-        /* 
-        filtered.mapPartitions[Row](rIter => bColumns.value
-            .map(col => rIter.map(row => Row(col) +: Row(row.getAs[String](col)) ))).toIterator.flatten).coalesce(1,true)
-        */
+        val t = dTbl.rdd.map(row => row.toSeq.fold(0)((f,v) => if(f.toString.toInt > v.toString.toInt) f.toString.toInt else v.toString.toInt))
+        t.foreach(r => println(r))
     }
 
     def isCountryOfInterest(country: String): Boolean = {
