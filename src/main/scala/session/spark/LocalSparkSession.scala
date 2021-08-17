@@ -20,7 +20,6 @@ object LocalSparkSession {
         .builder
         .appName(app_name)
         .config(spark_master_set, spark_master)
-        //.enableHiveSupport()
         .getOrCreate()
     }
 }
