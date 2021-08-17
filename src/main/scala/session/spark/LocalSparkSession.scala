@@ -1,7 +1,6 @@
 package session.spark
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.SparkContext._
 
 object LocalSparkSession {
     private var lss: SparkSession   = null

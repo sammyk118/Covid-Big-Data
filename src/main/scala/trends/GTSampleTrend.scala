@@ -1,14 +1,9 @@
 package trends
-
-import session.spark.LocalSparkSession
 import trends.util.DateValDiff
 import covid.tables.DFTables
-import org.apache.spark.sql._
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import scala.collection.mutable.ListBuffer
 
-object sampleTrend {
-  def thisisamethod: Unit = {
+object T0worstDays {
+  def findMax: Unit = {
     val confirmed = DFTables.getCOVID_19Confirmed
     println("hooray!")
     val conDiff = DateValDiff.divideDiffDF(confirmed)
@@ -27,7 +22,7 @@ object sampleTrend {
     maxrdd.foreach(x => {
       println(x)
     })
-    val countryrdd =
+    //val country rdd =
 
 
     //      println("Max : "+dDiffNeatRDD.fold(Row(0))( (acc,ele)=>{
