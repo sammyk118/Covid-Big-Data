@@ -15,7 +15,7 @@ object Start {
     println("created spark session")
 
     def input() {
-      println("What would you like to do? \nGTSampleTrend: 0 \nT1PopulationDensity: 1 \nT2TrendName: 2 \nT3TrendName: 3 \nT4TrendName: 4\n")
+      println("What would you like to do? \nT0worstDays: 0 \nT1PopulationDensity: 1 \nT2TrendName: 2 \nT3TrendName: 3 \nT4TrendName: 4\n")
       print("enter your command here: ")
       val command = readLine()
       if (command == "0") {
