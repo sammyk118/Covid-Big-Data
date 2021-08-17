@@ -3,18 +3,28 @@ package trends.util
 import session.spark.LocalSparkSession
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row}
-import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, StringType, StructField, StructType}
+import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, LongType, StringType, StructField, StructType}
 
 object DateValDiff {
     def divideDiffDF: DataFrame => DataFrame = df_handle => {
-        val ((othCols, othNCN),(valCols, newCN)) = divideDiffRDD(df_handle.rdd -> df_handle.columns)
-        
-        val joinedCols = othNCN ++ newCN
-        val joinedTable = othCols.rdd.zip(valCols.rdd).map{case (leftT, rightT) => Row((leftT.toSeq ++ rightT.toSeq):_*)}
-        inferPrimSchema(joinedTable -> joinedCols)
+        joinRowToRow(divideDiff(df_handle.rdd -> df_handle.columns))
     }
 
-    def divideDiffRDD: Tuple2[RDD[Row],Seq[String]] => Tuple2[(DataFrame,Seq[String]),(DataFrame, Seq[String])] = {
+    def divideDiffRDD: Tuple2[RDD[Row],Seq[String]] => Tuple2[RDD[Row],Seq[String]] = {
+        case (rdd_handle, columns) =>
+            val joinedDF = joinRowToRow(divideDiff(rdd_handle, columns))
+            (joinedDF.rdd, joinedDF.columns)
+    }
+    
+    def joinRowToRow: Tuple2[(DataFrame,Seq[String]),(DataFrame, Seq[String])] => DataFrame = {
+        case ((othCols, othNCN),(valCols, newCN)) =>
+            val joinedCols = othNCN ++ newCN
+            val joinedTable = othCols.rdd.zip(valCols.rdd)
+                                .map{case (leftT, rightT) => Row((leftT.toSeq ++ rightT.toSeq):_*)}
+            inferPrimSchema(joinedTable -> joinedCols)
+    }
+
+    def divideDiff: Tuple2[RDD[Row],Seq[String]] => Tuple2[(DataFrame,Seq[String]),(DataFrame, Seq[String])] = {
         case (rdd_handle, columns) => 
             val dateCols  = columns.filter(col => "\\d".r.findFirstIn(col).isDefined)
             val otherCols = columns.filter(col => "\\d".r.findFirstIn(col).isEmpty)
@@ -44,7 +54,7 @@ object DateValDiff {
 
     def inferType: Any => DataType = {
         case null => StringType
-        case n if(n.isInstanceOf[Int]) => IntegerType
+        case n if(n.isInstanceOf[Long]) => LongType
         case n if(n.isInstanceOf[Double]) => DoubleType
         case s => StringType
     }
@@ -52,12 +62,10 @@ object DateValDiff {
     def diffRDD: Tuple2[RDD[Row],Seq[(String,String)]] => (DataFrame, Seq[String]) = {
         case (rdd_handle, diffCols) =>
             val unstructRDD = rdd_handle.map(row => Row(diffCols
-                .foldLeft(Seq[Long]())((f, v) => f ++ Seq[Long](row.getAs[Long](v._1) - row.getAs[Long](v._2))):_*))
+                .foldLeft(Seq[Any]())((f, v) => f ++ Seq[Any](row.getAs[Any](v._1).toString.toLong - row.getAs[Long](v._2).toString.toLong)):_*))
             
+            val defCols = diffCols.map{case (leftOpd, rightOpd) => leftOpd}
 
-            val defCols = diffCols.map{case (leftOpd, rightOpd) => leftOpd + " - " + rightOpd}
-
-        
-                (inferPrimSchema(unstructRDD,defCols), defCols)
+            (inferPrimSchema(unstructRDD,defCols), defCols)
     }
 }
