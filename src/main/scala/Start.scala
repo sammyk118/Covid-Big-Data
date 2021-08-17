@@ -3,7 +3,7 @@ import org.apache.spark.sql.SparkSession
 import scala.io.StdIn.readLine
 import session.spark.LocalSparkSession
 import covid.tables.DFTables
-import trends.{PopulationDensity, sampleTrend, TrendTwo, TrendThree, TrendFour} //enter your query imports here
+import trends.{PopulationDensity, T0worstDays, TrendTwo, TrendThree, TrendFour} //enter your query imports here
 
 object Start {
   val spark = LocalSparkSession()
@@ -15,11 +15,11 @@ object Start {
     println("created spark session")
 
     def input() {
-      println("What would you like to do? \nGTSampleTrend: 0 \nT1PopulationDensity: 1 \nT2TrendName: 2 \nT3TrendName: 3 \nT4TrendName: 4\n")
+      println("What would you like to do? \nT0worstDays: 0 \nT1PopulationDensity: 1 \nT2TrendName: 2 \nT3TrendName: 3 \nT4TrendName: 4\n")
       print("enter your command here: ")
       val command = readLine()
       if (command == "0") {
-        sampleTrend.thisisamethod
+        T0worstDays.findMax
       }
       if (command == "1") {
         PopulationDensity.deflateDFTable

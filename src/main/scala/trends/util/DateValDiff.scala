@@ -54,7 +54,9 @@ object DateValDiff {
             val unstructRDD = rdd_handle.map(row => Row(diffCols
                 .foldLeft(Seq[Int]())((f, v) => f ++ Seq[Int](row.getAs[Int](v._1) - row.getAs[Int](v._2))):_*))
             
+
             val defCols = diffCols.map{case (leftOpd, rightOpd) => leftOpd + " - " + rightOpd}
+
         
                 (inferPrimSchema(unstructRDD,defCols), defCols)
     }
