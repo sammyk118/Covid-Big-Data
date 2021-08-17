@@ -63,7 +63,7 @@ object DateValDiff {
     def diffRDD: Tuple2[RDD[Row],Seq[(String,String)]] => (DataFrame, Seq[String]) = {
         case (rdd_handle, diffCols) =>
             val unstructRDD = rdd_handle.map(row => Row(diffCols
-                .foldLeft(Seq[Int]())((f, v) => f ++ Seq[Int](row.getAs[Int](v._1) - row.getAs[Int](v._2))):_*))
+                .foldLeft(Seq[Long]())((f, v) => f ++ Seq[Long](row.getAs[Long](v._1) - row.getAs[Long](v._2))):_*))
             
             val defCols = diffCols.map{case (leftOpd, rightOpd) => leftOpd}
         
