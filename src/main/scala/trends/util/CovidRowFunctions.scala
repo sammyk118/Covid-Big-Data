@@ -1,14 +1,19 @@
 package trends.util
 
-import session.spark.LocalSparkSession
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row}
 
 object CovidRowFunctions {
     private val dateMatchRegEx = "\\d".r
 
-    // def aggregateDateOp[R](base_case: R)(tOp: Row => (R, String) => R, rc: Tuple2[RDD[Row],Seq[String]]): RDD[Row] = {
-    // }
+    def aggregateDateOp[R](base_case: R)(tOp: Row => (R, String) => R, rc: Tuple2[RDD[Row],Seq[String]]): RDD[Row] = {
+        val guard: Row => (R, String) => Boolean = row => {case (f, v) => isDateCol(v)}
+        val fOp: Row => (R, String) => R = row => {case (f, v) => f}
+
+        val fofl = RowFunctionBase.withGuard(guard, tOp, fOp)
+
+        RowFunctionBase.rowFoldRDD(base_case)(rc,fofl)
+    }
 
     def vicinalDateOp(op: (Long,Long) => Long, rc: Tuple2[RDD[Row],Seq[String]], newCols: Seq[Tuple2[String,String]] => Seq[String] = defVicinalDateColsOp _): (DataFrame,Seq[String]) = {
         val rTc = (rc._1, colSepJoinZip(rc._2))
@@ -32,9 +37,13 @@ object CovidRowFunctions {
         RowFunctionBase.biColFuncDF(rTc,fofl,newCols)
     }
 
+    def isDateCol(columnName: String): Boolean = {
+        dateMatchRegEx.findFirstIn(columnName).isDefined
+    }
+
     def colSepJoinZip(columns: Seq[String]): Seq[Tuple2[String,String]] = {
-        val dateCols  = columns.filter(col => dateMatchRegEx.findFirstIn(col).isDefined)
-        val otherCols = columns.filter(col => dateMatchRegEx.findFirstIn(col).isEmpty)
+        val dateCols  = columns.filter(col => isDateCol(col))
+        val otherCols = columns.filter(col => !isDateCol(col))
         val priOperandDate = dateCols.drop(1)
         val secOperandDate = dateCols.dropRight(1)
 

@@ -40,7 +40,7 @@ object RowFunctionBase {
     }
 
     /*
-     * This function may not work depending on the base case because it will automatically
+     * The rowFoldDF[R] function may not work depending on the base case because it will automatically
      * make a call to inferPrimSchema which will only work on primitive types and Strings.
      */
     // def rowFoldDF[R](base_case: R)(rc: Tuple2[RDD[Row],Seq[String]], fofl: Row => (R, String) => R, newCols: Seq[String] => Seq[String]): (DataFrame,Seq[String]) = {
