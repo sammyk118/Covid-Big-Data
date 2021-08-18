@@ -17,18 +17,7 @@ object PopulationDensity {
 
         val filtered = cov_19Conf.filter(row => isCountryOfInterest(row.getAs[String]("Country/Region")))
 
-        //val ((othColsDF, colNames), (valColsDF, diffColNames)) = divideDiffRDD(filtered, columns)
-        // val othCols = othColsDF.rdd
-        // val valCols = valColsDF.rdd
-
-        //valCols.foreach(row => println(row))
-
-        DateValDiff.divideDiffDF(DFTables.getCOVID_19Confirmed).show(5, 7, false)
-        
-        /* 
-        filtered.mapPartitions[Row](rIter => bColumns.value
-            .map(col => rIter.map(row => Row(col) +: Row(row.getAs[String](col)) ))).toIterator.flatten).coalesce(1,true)
-        */
+        DateValDiff.divideDiffRDD(filtered -> columns)._1.foreach(println(_))
     }
 
     def isCountryOfInterest(country: String): Boolean = {
