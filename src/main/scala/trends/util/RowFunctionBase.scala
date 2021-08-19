@@ -119,7 +119,7 @@ object RowFunctionBase {
     /*
      *  The private, default column naming function for _createDataFrame
      */
-    private def defColsOp[T](cols: Seq[T]): Seq[String] = {
+    def defColsOp[T](cols: Seq[T]): Seq[String] = {
         if (cols.head.isInstanceOf[String])
             cols.asInstanceOf[Seq[String]]
         else
