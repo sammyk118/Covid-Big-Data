@@ -42,6 +42,7 @@ object TrendTwo {
     sc.setLogLevel("ERROR")
 
 
+
 //     val date_table1 = DateValDiff.divideDiffDF(createFiltered_country(mytable1))
 //     val date_table2 = DateValDiff.divideDiffDF(createFiltered_country(mytable2))
 //    val date_table3 = DateValDiff.divideDiffDF(createFiltered_country(mytable3))
@@ -62,6 +63,7 @@ object TrendTwo {
 //    spark.sql(s" create table if not exists final_table1 as ( select $selected_col from infection1 inner join recover1 on infection1.`Country/Region` = recover1.`Country/Region` inner join death1 on recover1.`Country/Region` = death1.`Country/Region`) ")
 
     spark.sql("select * from final_table1").show()
+
   }
 
   def format_column_explicit(column: Array[String], view_name: String): Array[String] = {
