@@ -25,7 +25,7 @@ object RowFunctionBase {
     def createRDD[T,R](base_case: R)(fofl: Row => (R, T) => R, rc: Tuple2[RDD[Row],Seq[T]]): RDD[Row] = rc match {
         case (rdd_handle, columns) =>
             val rowColFunction = (col: Seq[T]) => (row: Row) => col.foldLeft(base_case)(fofl(row))
-            _createRDD(rc, rowColFunction)
+            _createRDD[T,R](rc, rowColFunction)
     }
 
     def _createRDD[T,R](rc: Tuple2[RDD[Row], Seq[T]], foColR: Seq[T] => Row => R): RDD[Row] = rc match {
