@@ -9,9 +9,6 @@ import trends.util.RowFunctionBase
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame,Column,Row}
 import org.apache.spark.storage.StorageLevel
-/*
- *  Work in Progress
- */
 
 object PopulationDensity {
     def deflateDFTable: Unit = {
