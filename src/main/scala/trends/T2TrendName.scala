@@ -52,7 +52,7 @@ object TrendTwo {
     date_table1.createOrReplaceTempView("infection1")
     date_table2.createOrReplaceTempView("recover1")
     date_table3.createOrReplaceTempView("death1")
-    spark.sql(s" select $selected_col from infection1 inner join recover1 on infection1.'Country/Region` = recover1.'Country/Region`  inner join death1 on infection1.'Country/Region` = death1.'Country/Region` ")
+    spark.sql(s" select $selected_col from infection1 inner join recover1 on infection1.`Country/Region` = recover1.`Country/Region`  inner join death1 on infection1.`Country/Region` = death1.`Country/Region` ")
       .show()
   }
   def format_column_explicit(column: Array[String], view_name: String) : Array[String] = {
