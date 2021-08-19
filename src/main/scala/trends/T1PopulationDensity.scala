@@ -19,7 +19,7 @@ object PopulationDensity {
         val filtered = cov_19Conf.filter(row => isCountryOfInterest(row.getAs[String]("Country/Region")))
 
         //DateValDiff.divideDiffRDD(filtered -> columns)._1.foreach(println(_))
-        filtered.foreach(x => println(x))
+
         trends.util.DateMax.findMaxIncludeCountryAndDate(DateValDiff.divideDiffDF(DFTables.getCOVID_19Confirmed)).where("Max < 1500").show(300)
     }
 
