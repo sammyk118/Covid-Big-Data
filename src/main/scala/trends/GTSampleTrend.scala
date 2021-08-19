@@ -14,6 +14,7 @@ object T0worstDays {
     // dates and country -> use createsumselect from t2, add sum to every date col. no formatcolumnexplicit
     val confirmed = DFTables.getCOVID_19Confirmed
     println("hooray!")
+    confirmed.repartition()
     val aggDF = groupCountries(confirmed)
     aggDF.show()
 //    val filtered = confirmed.filter(row => filteredCountry(row.getAs[String]("Country/Region")))
