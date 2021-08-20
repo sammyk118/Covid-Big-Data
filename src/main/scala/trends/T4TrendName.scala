@@ -11,6 +11,7 @@ import trends.util.DateValDiff
 object TrendFour{
   def start(): Unit ={
     val spark = LocalSparkSession()
+
 //    spark.sql("select * from recPct").show()
     spark.sql("select `Country/Region`, (totalRecovered/totalCases)*100 as percent_recovered from recPct " +
       "where `Country/Region` = 'Afghanistan' " +
