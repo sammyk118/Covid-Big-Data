@@ -5,6 +5,8 @@ import org.apache.spark.sql.{DataFrame, Row}
 
 object CovidRowFunctions {
     private val dateMatchRegEx = "\\d".r
+    //private val dateMatchRegEx = "\\d{1,4}?\\/\\d{1,2}?\\/\\d".r
+    //private val dateMatchRegEx = "(\\d{1,4}?\\/\\d{1,2}?)\\w".r
 
     def aggregateDateOp[R](base_case: R)(tOp: Row => (R, String) => R, rc: Tuple2[RDD[Row],Seq[String]]): RDD[Row] = {
         val guard: Row => (R, String) => Boolean = row => {case (f, v) => isDateCol(v)}

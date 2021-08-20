@@ -57,7 +57,7 @@ object RowFunctionBase {
     def createRDD[T,R](base_case: R)(fofl: Row => (R, T) => R, rc: Tuple2[RDD[Row],Seq[T]]): RDD[Row] = rc match {
         case (rdd_handle, columns) =>
             val rowColFunction = (col: Seq[T]) => (row: Row) => col.foldLeft(base_case)(fofl(row))
-            _createRDD[T,R](rc, rowColFunction)
+            _createRDD(rc, rowColFunction)
     }
 
     /*
@@ -119,7 +119,7 @@ object RowFunctionBase {
     /*
      *  The private, default column naming function for _createDataFrame
      */
-    private def defColsOp[T](cols: Seq[T]): Seq[String] = {
+    def defColsOp[T](cols: Seq[T]): Seq[String] = {
         if (cols.head.isInstanceOf[String])
             cols.asInstanceOf[Seq[String]]
         else
