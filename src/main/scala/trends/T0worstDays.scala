@@ -7,6 +7,7 @@ import session.spark.LocalSparkSession
 import org.apache.spark.sql.{DataFrame, Dataset, RelationalGroupedDataset, Row, SparkSession}
 import org.apache.spark.sql.functions._
 
+
 object T0worstDays {
   def findMax: Unit = {
 
@@ -15,30 +16,26 @@ object T0worstDays {
     val recovered = DFTables.getCOVID_19Recovered
     val rename: Seq[(String, String)] => Seq[String] = columNames => columNames.map { case (col1, _) => if (col1.contains("sum")) col1.split("\\(")(1).init else col1 }
 
-
+    // groups entries by country, finds the difference to get daily values,
+    // then finds the max value for each row
     val caseDay = DateMax.findMaxIncludeCountryAndDate(
       DateValDiff.divideDiffDF(
-        groupCountries(confirmed), rename)
+        groupCountries(confirmed), rename).filter(
+        row => filteredCountry(
+          row.getAs[String]("Country/Region")))
     )
     val deathDay = DateMax.findMaxIncludeCountryAndDate(
       DateValDiff.divideDiffDF(
-        groupCountries(deaths), rename)
+        groupCountries(deaths), rename).filter(
+        row => filteredCountry(
+          row.getAs[String]("Country/Region")))
     )
     val recoverDay = DateMax.findMaxIncludeCountryAndDate(
       DateValDiff.divideDiffDF(
-        groupCountries(recovered), rename)
+        groupCountries(recovered), rename).filter(
+        row => filteredCountry(
+          row.getAs[String]("Country/Region")))
     )
-    val filtCase = caseDay.filter(row => filteredCountry(row.getAs[String]("Country/Region")))
-    println("Cases: ")
-    filtCase.show()
-
-    val filtRec = caseDay.filter(row => filteredCountry(row.getAs[String]("Country/Region")))
-    println("Recovered: ")
-    filtRec.show()
-
-    val filtDeath = caseDay.filter(row => filteredCountry(row.getAs[String]("Country/Region")))
-    println("Deaths: ")
-    filtDeath.show()
 
 
     println("Cases:")
@@ -47,8 +44,9 @@ object T0worstDays {
     deathDay.orderBy(desc("Max")).show()
     println("Recovered:")
     recoverDay.orderBy(desc("Max")).show()
-  }
 
+    confirmed.explain
+  }
 
   val spark = LocalSparkSession()
 
