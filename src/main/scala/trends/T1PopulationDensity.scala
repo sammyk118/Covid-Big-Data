@@ -1,33 +1,29 @@
 package trends
 
-import session.spark.LocalSparkSession
 import covid.tables.DFTables
-import trends.util.DateValDiff
-import trends.util.CovidRowFunctions
-import trends.util.RowFunctionBase
+import trends.util.{DateValDiff,CovidRowFunctions,RowFunctionBase}
 
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame,Column,Row}
+import org.apache.spark.sql.{DataFrame,Row}
 import org.apache.spark.storage.StorageLevel
 
 object PopulationDensity {
     def deflateDFTable: Unit = {
-        val spark                = LocalSparkSession()
-        val columns: Seq[String] = DFTables.getHeaderCOVID_19Confirmed
-        val cov_19Conf           = DFTables.getCOVID_19Confirmed
+        val columns     = DFTables.getHeaderCOVID_19Confirmed
+        val cov_19Conf  = DFTables.getCOVID_19Confirmed.rdd
+        
+        val filteredRDD = filterCountryOfInterest(cov_19Conf)
+        val fltGrpFilRDD = groupByCountryAndSumNumFields(filteredRDD, columns)
 
-        val filteredDF0 = cov_19Conf.filter(row => isCountryOfInterest(row.getAs[String]("Country/Region"))).drop("Lat","Long")
-        val filteredDF = filteredDF0.groupBy("Country/Region").sum().drop("sum(Lat)","sum(Long)").persist(StorageLevel.MEMORY_ONLY)
+        val selColumns = selectColumns(columns)
+        val selFltGrpFilRDD = dropExtraColumns(fltGrpFilRDD, selColumns)
+        val filteredDiffRDD = calculateDailyDifference(selFltGrpFilRDD, selColumns).persist(StorageLevel.MEMORY_ONLY)
+        
+        val lowMedHighDen = getLowMedHighDensityRDDs(filteredDiffRDD)
+        
+        showLowMedHigh(lowMedHighDen, selColumns)
 
-        val filteredDiffDF = DateValDiff.divideDiffDF(filteredDF, renameColumns _)
-
-        val lowDenFil  = filteredDiffDF.filter(row => isLowDensCo(row.getAs[String]("Country/Region")))
-        val medDenFil  = filteredDiffDF.filter(row => isMedDensCo(row.getAs[String]("Country/Region")))
-        val highDenFil = filteredDiffDF.filter(row => isHighDensCo(row.getAs[String]("Country/Region")))
-
-        lowDenFil.show()
-        medDenFil.show()
-        highDenFil.show()
+        filteredDiffRDD.unpersist()
     }
 
     def isCountryOfInterest(country: String): Boolean = {
@@ -49,11 +45,63 @@ object PopulationDensity {
         country == "India" || country == "Philippines" || country == "Korea, South" || country == "Japan"
     }
 
-    def renameColumns(oldCols: Seq[(String,String)]): Seq[String] = oldCols.map {
-        case (col,_) =>
-            if (col.contains("sum"))
-                col.split("\\(").last.init
-            else
-                col 
+    def createBaseRowForAggregation(sampleRow: Row): Row = {
+        Row.fromSeq(Row.unapplySeq(sampleRow).get.map{
+            case ele if(ele == null) => null
+            case (ele: Int)          => 0.toLong
+            case (ele: Long)         => 0l
+            case (ele: Double)       => 0.0
+            case _                   => ""
+        })
+    }
+
+    def sumRowElements(lftRow: Row, rtRow: Row): Row = {
+        Row.fromSeq(Row.unapplySeq(lftRow).get.zip(Row.unapplySeq(rtRow).get).map {
+            case ((el1: Long), (el2: Long))     => el1 + el2
+            case ((el1: Double), (el2: Double)) => el1 + el2
+            case (el1, el2) if (el1 == null)    => el2
+            case (el1, el2) if (el2 == null)    => null
+            case (_, el2)               => el2.toString
+        })
+    }
+
+    def selectColumns(cols: Seq[String]): Seq[String] = {
+        cols.filter(col => CovidRowFunctions.isDateCol(col) || col == "Country/Region")
+    }
+
+    def filterCountryOfInterest(rdd_handle: RDD[Row]): RDD[Row] = {
+        rdd_handle.filter(row => isCountryOfInterest(row.getAs[String]("Country/Region")))
+    }
+
+    def groupByCountryAndSumNumFields(rdd_handle: RDD[Row], cols: Seq[String]): RDD[Row] = {
+        val base_case_Row = createBaseRowForAggregation(rdd_handle.first)
+        val grpFilRDD = rdd_handle.groupBy(row => row.getAs[String]("Country/Region"))
+                        .aggregateByKey(base_case_Row)(
+                            (baseRow,itrRow) => itrRow.foldLeft(baseRow)((f,v) => sumRowElements(f,v)),
+                            (baseRow,summedRow) => summedRow
+                        )
+        RowFunctionBase.inferPrimSchema(grpFilRDD.map{case (_, row) => row} -> cols).rdd
+    }
+
+    def dropExtraColumns(rdd_handle: RDD[Row], cols: Seq[String]): RDD[Row] = {
+        RowFunctionBase.createDataFrame(rdd_handle -> cols)._1.rdd
+    }
+
+    def calculateDailyDifference(rdd_handle: RDD[Row], cols: Seq[String]): RDD[Row] = {
+        DateValDiff.divideDiffRDD(rdd_handle -> cols)._1
+    }
+
+    def getLowMedHighDensityRDDs(rdd_handle: RDD[Row]): Tuple3[RDD[Row],RDD[Row],RDD[Row]] = {
+        val lowDenFil  = rdd_handle.filter(row => isLowDensCo(row.getAs[String]("Country/Region")))
+        val medDenFil  = rdd_handle.filter(row => isMedDensCo(row.getAs[String]("Country/Region")))
+        val highDenFil = rdd_handle.filter(row => isHighDensCo(row.getAs[String]("Country/Region")))
+        (lowDenFil,medDenFil,highDenFil)
+    }
+
+    def showLowMedHigh(rrr: Tuple3[RDD[Row],RDD[Row],RDD[Row]], cols: Seq[String]): Unit = rrr match{
+        case (lowDenFil, medDenFil, highDenFil) =>
+            RowFunctionBase.inferPrimSchema(lowDenFil -> cols).show()
+            RowFunctionBase.inferPrimSchema(medDenFil -> cols).show()
+            RowFunctionBase.inferPrimSchema(highDenFil -> cols).show()
     }
 }
